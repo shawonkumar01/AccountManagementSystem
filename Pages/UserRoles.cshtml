@@ -1,19 +1,18 @@
 ﻿@page
-@model UserRolesModel
-@using Microsoft.AspNetCore.Identity
+@model AccountManagementSystem.Pages.UserRolesModel
 @{
-    ViewData["Title"] = "Assign Roles to Users";
+    ViewData["Title"] = "Manage Users and Roles";
 }
 
-<h2>Assign Roles</h2>
+<h2>Manage Users and Roles</h2>
 
-<table class="table">
+<table class="table table-bordered">
     <thead>
         <tr>
             <th>Email</th>
             <th>Current Role</th>
-            <th>Assign New Role</th>
-            <th>Action</th>
+            <th>Change Role</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -25,12 +24,21 @@
                 <td>
                     <form method="post">
                         <input type="hidden" name="UserId" value="@user.Id" />
-                        <select name="SelectedRole" class="form-control">
-                            <option value="Admin">Admin</option>
-                            <option value="Accountant">Accountant</option>
-                            <option value="Viewer">Viewer</option>
+                        <select name="SelectedRole" class="form-select">
+                            @foreach (var role in Model.AllRoles)
+                            {
+                                <option value="@role" selected="@(role == user.CurrentRole ? "selected" : null)">
+                                    @role
+                                </option>
+                            }
                         </select>
-                        <button type="submit" class="btn btn-sm btn-primary mt-1">Assign</button>
+                        <button type="submit" class="btn btn-primary btn-sm mt-1">Update Role</button>
+                    </form>
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="Delete" onsubmit="return confirm('Are you sure you want to delete this user?');" style="display:inline;">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </td>
             </tr>

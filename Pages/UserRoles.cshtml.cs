@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AccountManagementSystem.Pages
 {
-    [Authorize(Roles = "Admin")] // ✅ Restrict the page to Admins only
+    [Authorize(Roles = "Admin")]
     public class UserRolesModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -18,6 +21,7 @@ namespace AccountManagementSystem.Pages
         }
 
         public List<UserWithRole> Users { get; set; }
+        public List<string> AllRoles { get; set; }  // Load roles dynamically
 
         public async Task OnGetAsync()
         {
@@ -34,16 +38,40 @@ namespace AccountManagementSystem.Pages
                     CurrentRole = roles.FirstOrDefault() ?? "None"
                 });
             }
+
+            // Only load the three specific roles: Admin, Accountant, Viewer
+            var allRoles = _roleManager.Roles.Select(r => r.Name).ToList();
+            AllRoles = allRoles.Where(r => r == "Admin" || r == "Accountant" || r == "Viewer").ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string UserId, string SelectedRole)
         {
+            if (string.IsNullOrEmpty(UserId) || string.IsNullOrEmpty(SelectedRole))
+                return RedirectToPage();
+
             var user = await _userManager.FindByIdAsync(UserId);
             if (user != null)
             {
                 var currentRoles = await _userManager.GetRolesAsync(user);
                 await _userManager.RemoveFromRolesAsync(user, currentRoles);
-                await _userManager.AddToRoleAsync(user, SelectedRole);
+                if (await _roleManager.RoleExistsAsync(SelectedRole))
+                {
+                    await _userManager.AddToRoleAsync(user, SelectedRole);
+                }
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteAsync(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return RedirectToPage();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                await _userManager.DeleteAsync(user);
             }
 
             return RedirectToPage();
