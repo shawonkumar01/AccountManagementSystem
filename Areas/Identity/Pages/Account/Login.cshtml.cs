@@ -51,6 +51,7 @@ namespace AccountManagementSystem.Areas.Identity.Pages.Account
 
             returnUrl ??= Url.Content("~/Dashboard");
 
+
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             ReturnUrl = returnUrl;

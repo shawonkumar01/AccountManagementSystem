@@ -1,5 +1,8 @@
-﻿@page
+﻿@page 
 @model DashboardModel
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin,Accountant,Viewer")]
+
 @{
     ViewData["Title"] = "Dashboard";
 }
@@ -10,16 +13,38 @@
     @if (User.IsInRole("Admin"))
     {
         <a class="btn btn-primary m-2" asp-page="/UserRoles">User Roles</a>
-
-    }
-
-    @if (User.IsInRole("Admin") || User.IsInRole("Accountant") || User.IsInRole("Viewer"))
-    {
-        <a class="btn btn-success m-2" asp-page="/ChartOfAccounts">Chart of Accounts</a>
     }
 
     @if (User.IsInRole("Admin") || User.IsInRole("Accountant"))
     {
+        <a class="btn btn-success m-2" asp-page="/ChartOfAccounts">Chart of Accounts</a>
+        <a class="btn btn-warning m-2" asp-page="/VoucherEntry">Voucher Entry Module</a>
+    }
+
+    @if (User.IsInRole("Viewer"))
+    {
+        <form method="get" class="d-inline">
+            <div class="input-group m-2" style="max-width: 300px;">
+                <input type="number" name="SearchCode" class="form-control" placeholder="Enter Account ID" required />
+                <button type="submit" class="btn btn-outline-info">Search My Account</button>
+            </div>
+        </form>
         <a class="btn btn-warning m-2" asp-page="/VoucherEntry">Voucher Entry Module</a>
     }
 </div>
+
+@if (Model.SearchedAccount != null)
+{
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Account: @Model.SearchedAccount.AccountName</h5>
+            <p class="card-text">Code: @Model.SearchedAccount.AccountCode</p>
+            <p class="card-text">Type: @Model.SearchedAccount.AccountType</p>
+            <p class="card-text">Parent ID: @Model.SearchedAccount.ParentId</p>
+        </div>
+    </div>
+}
+else if (User.IsInRole("Viewer") && ViewContext.HttpContext.Request.Query.ContainsKey("SearchId"))
+{
+    <div class="alert alert-danger">No account found with that ID.</div>
+}

@@ -12,22 +12,23 @@ public class ChartOfAccountsRepository
 
     public void ManageAccount(string mode, ChartOfAccount acc)
     {
-        using var conn = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("sp_ManageChartOfAccounts", conn)
+        using (var con = new SqlConnection(_connectionString))
+        using (var cmd = new SqlCommand("sp_ManageChartOfAccounts", con))
         {
-            CommandType = CommandType.StoredProcedure
-        };
+            cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@Mode", mode);
-        cmd.Parameters.AddWithValue("@Id", acc.Id);
-        cmd.Parameters.AddWithValue("@AccountName", acc.AccountName ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@ParentId", acc.ParentId ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@AccountCode", acc.AccountCode ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@AccountType", acc.AccountType ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Mode", mode);
+            cmd.Parameters.AddWithValue("@Id", acc.Id);
+            cmd.Parameters.AddWithValue("@AccountName", acc.AccountName ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@ParentId", acc.ParentId ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@AccountCode", acc.AccountCode ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@AccountType", acc.AccountType ?? (object)DBNull.Value);
 
-        conn.Open();
-        cmd.ExecuteNonQuery();
+            con.Open();
+            cmd.ExecuteNonQuery();
+        }
     }
+
 
     public List<ChartOfAccount> GetAll()
     {

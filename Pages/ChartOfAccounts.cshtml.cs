@@ -14,18 +14,31 @@ public class ChartOfAccountsModel : PageModel
 
     [BindProperty]
     public ChartOfAccount NewAccount { get; set; }
+    public ChartOfAccount SearchedAccount { get; set; }
 
     public List<ChartOfAccount> AllAccounts { get; set; }
     public List<string> AccountTree { get; set; }
 
-    public void OnGet()
+    public void OnGet(int? searchId)
     {
         LoadData();
+
+        if (searchId.HasValue)
+        {
+            SearchedAccount = _repo.GetById(searchId.Value);
+        }
+
+        NewAccount = new ChartOfAccount(); // Prevent null form binding
     }
+
 
     public IActionResult OnPost()
     {
-        if (!ModelState.IsValid) return Page();
+        if (!ModelState.IsValid)
+        {
+            LoadData();
+            return Page();
+        }
 
         if (NewAccount.Id == 0)
             _repo.ManageAccount("Insert", NewAccount);

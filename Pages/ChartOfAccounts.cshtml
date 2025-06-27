@@ -4,59 +4,102 @@
     ViewData["Title"] = "Chart of Accounts";
 }
 
+<h2>Chart of Account Lookup</h2>
+
+@if (User.IsInRole("Viewer"))
+{
+    <form method="get">
+        <div class="input-group mb-3">
+            <input type="number" name="searchId" class="form-control" placeholder="Enter Your Account ID" />
+            <button type="submit" class="btn btn-outline-primary">Search My Account</button>
+        </div>
+    </form>
+    @if (Model.SearchedAccount != null)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">@Model.SearchedAccount.AccountName</h5>
+                <p class="card-text">Code: @Model.SearchedAccount.AccountCode</p>
+                <p class="card-text">Type: @Model.SearchedAccount.AccountType</p>
+                <p class="card-text">Parent ID: @Model.SearchedAccount.ParentId</p>
+            </div>
+        </div>
+    }
+    <a asp-page="/VoucherEntry" class="btn btn-secondary">Voucher Entry Module</a>
+    return;
+}
+
 <h2>Create or Update Account</h2>
 
 <form method="post">
     <input type="hidden" asp-for="NewAccount.Id" />
-    <input asp-for="NewAccount.AccountName" placeholder="Account Name" />
-    <input asp-for="NewAccount.AccountCode" placeholder="Account Code" />
-    <input asp-for="NewAccount.AccountType" placeholder="Account Type" />
-    <select asp-for="NewAccount.ParentId">
+    <input asp-for="NewAccount.AccountName" placeholder="Account Name" class="form-control mb-2" />
+    <input asp-for="NewAccount.AccountCode" placeholder="Account Code" class="form-control mb-2" />
+    <input asp-for="NewAccount.AccountType" placeholder="Account Type" class="form-control mb-2" />
+    <select asp-for="NewAccount.ParentId" class="form-select mb-3">
         <option value="">-- Select Parent --</option>
-        @foreach (var acc in Model.AllAccounts)
+        @if (Model.AllAccounts != null)
         {
-            <option value="@acc.Id">@acc.AccountName</option>
+            foreach (var acc in Model.AllAccounts)
+            {
+                <option value="@acc.Id">@acc.AccountName</option>
+            }
         }
     </select>
-    <button type="submit">Save</button>
+    <button type="submit" class="btn btn-primary">Save</button>
 </form>
 
 <hr />
 
-<h3>Account Tree</h3>
-<ul>
-    @foreach (var line in Model.AccountTree)
-    {
-        <li>@Html.Raw(line)</li>
-    }
-</ul>
-
-<hr />
-
-<h3>Manage Accounts</h3>
-<table>
-    <thead>
-        <tr><th>Name</th><th>Code</th><th>Type</th><th>Parent</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var acc in Model.AllAccounts)
+@if (Model.AllAccounts != null)
+{
+    <h3>Account Tree</h3>
+    <ul>
+        @foreach (var line in Model.AccountTree)
         {
-            <tr>
-                <td>@acc.AccountName</td>
-                <td>@acc.AccountCode</td>
-                <td>@acc.AccountType</td>
-                <td>@Model.AllAccounts.FirstOrDefault(p => p.Id == acc.ParentId)?.AccountName</td>
-                <td>
-                    <form method="post" asp-page-handler="Edit">
-                        <input type="hidden" name="id" value="@acc.Id" />
-                        <button type="submit">Edit</button>
-                    </form>
-                    <form method="post" asp-page-handler="Delete">
-                        <input type="hidden" name="id" value="@acc.Id" />
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
+            <li>@Html.Raw(line)</li>
         }
-    </tbody>
-</table>
+    </ul>
+
+    <hr />
+
+    <h3>Manage Accounts</h3>
+    <table class="table">
+        <thead>
+            <tr><th>Name</th><th>Code</th><th>Type</th><th>Parent</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var acc in Model.AllAccounts)
+            {
+                var isParent = Model.AllAccounts.Any(child => child.ParentId == acc.Id);
+                <tr>
+                    <td>@acc.AccountName</td>
+                    <td>@acc.AccountCode</td>
+                    <td>@acc.AccountType</td>
+                    <td>@Model.AllAccounts.FirstOrDefault(p => p.Id == acc.ParentId)?.AccountName</td>
+                    <td>
+                        <form method="post" asp-page-handler="Edit" class="d-inline">
+                            <input type="hidden" name="id" value="@acc.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Edit</button>
+                        </form>
+                        @if (!isParent)
+                        {
+                            <form method="post" asp-page-handler="Delete" class="d-inline">
+                                <input type="hidden" name="id" value="@acc.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Has child accounts">Delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-danger">⚠️ Account list not loaded. Please try again later.</p>
+}
