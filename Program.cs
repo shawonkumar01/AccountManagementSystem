@@ -35,6 +35,7 @@ builder.Services.AddRazorPages(options =>
 });
 
 builder.Services.AddTransient<ChartOfAccountsRepository>();
+builder.Services.AddTransient<VoucherRepository>();
 
 var app = builder.Build();
 
