@@ -21,7 +21,10 @@ namespace AccountManagementSystem.Pages
         }
 
         public List<UserWithRole> Users { get; set; }
-        public List<string> AllRoles { get; set; }  // Load roles dynamically
+        public List<string> AllRoles { get; set; }
+
+        [TempData]
+        public string Message { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -39,24 +42,34 @@ namespace AccountManagementSystem.Pages
                 });
             }
 
-            // Only load the three specific roles: Admin, Accountant, Viewer
-            var allRoles = _roleManager.Roles.Select(r => r.Name).ToList();
-            AllRoles = allRoles.Where(r => r == "Admin" || r == "Accountant" || r == "Viewer").ToList();
+            AllRoles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(r => r == "Admin" || r == "Accountant" || r == "Viewer")
+                .ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string UserId, string SelectedRole)
         {
             if (string.IsNullOrEmpty(UserId) || string.IsNullOrEmpty(SelectedRole))
+            {
+                Message = "Invalid request.";
                 return RedirectToPage();
+            }
 
             var user = await _userManager.FindByIdAsync(UserId);
             if (user != null)
             {
                 var currentRoles = await _userManager.GetRolesAsync(user);
                 await _userManager.RemoveFromRolesAsync(user, currentRoles);
+
                 if (await _roleManager.RoleExistsAsync(SelectedRole))
                 {
                     await _userManager.AddToRoleAsync(user, SelectedRole);
+                    Message = "Role updated successfully.";
+                }
+                else
+                {
+                    Message = "Selected role does not exist.";
                 }
             }
 
@@ -66,12 +79,22 @@ namespace AccountManagementSystem.Pages
         public async Task<IActionResult> OnPostDeleteAsync(string id)
         {
             if (string.IsNullOrEmpty(id))
+            {
+                Message = "Invalid user ID.";
                 return RedirectToPage();
+            }
 
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
+                if (user.Email == User.Identity.Name)
+                {
+                    Message = "You cannot delete your own account.";
+                    return RedirectToPage();
+                }
+
                 await _userManager.DeleteAsync(user);
+                Message = "User deleted.";
             }
 
             return RedirectToPage();

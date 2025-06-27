@@ -1,59 +1,55 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿// ✅ Program.cs (FINAL FIXED VERSION)
 using AccountManagementSystem.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Set connection string (rename key if needed)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                       ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// ✅ Register ApplicationDbContext
 builder.Services.AddDbContext<AccountManagementSystemContext>(options =>
     options.UseSqlServer(connectionString));
 
-// ✅ Register Identity with Roles
-builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
-.AddRoles<IdentityRole>()
-.AddEntityFrameworkStores<AccountManagementSystemContext>();
+.AddEntityFrameworkStores<AccountManagementSystemContext>()
+.AddDefaultUI()
+.AddDefaultTokenProviders();
 
-// ✅ Add Razor Pages
-builder.Services.AddRazorPages();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/AccessDenied";
+    options.ReturnUrlParameter = "ReturnUrl";
+});
+
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeFolder("/");
+    options.Conventions.AllowAnonymousToPage("/Index");
+    options.Conventions.AllowAnonymousToPage("/Identity/Account/Login");
+    options.Conventions.AllowAnonymousToPage("/Identity/Account/Register");
+});
+
+builder.Services.AddTransient<ChartOfAccountsRepository>();
 
 var app = builder.Build();
 
-// ✅ Seed Roles BEFORE app.Run
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = { "Admin", "Accountant", "Viewer" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
-    }
-}
-using (var scope = app.Services.CreateScope())
-{
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
     string[] roles = { "Admin", "Accountant", "Viewer" };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
-        {
             await roleManager.CreateAsync(new IdentityRole(role));
-        }
     }
 
-    // ✅ Seed default Admin user
     string adminEmail = "admin@gmail.com";
     string adminPassword = "Admin@123";
 
@@ -66,8 +62,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
-// ✅ Middleware pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -76,11 +70,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-app.UseAuthentication(); // 🧠 Don't forget this!
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapRazorPages();
-
 app.Run();

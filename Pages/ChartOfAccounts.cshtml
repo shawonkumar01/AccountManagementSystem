@@ -1,0 +1,62 @@
+﻿@page
+@model ChartOfAccountsModel
+@{
+    ViewData["Title"] = "Chart of Accounts";
+}
+
+<h2>Create or Update Account</h2>
+
+<form method="post">
+    <input type="hidden" asp-for="NewAccount.Id" />
+    <input asp-for="NewAccount.AccountName" placeholder="Account Name" />
+    <input asp-for="NewAccount.AccountCode" placeholder="Account Code" />
+    <input asp-for="NewAccount.AccountType" placeholder="Account Type" />
+    <select asp-for="NewAccount.ParentId">
+        <option value="">-- Select Parent --</option>
+        @foreach (var acc in Model.AllAccounts)
+        {
+            <option value="@acc.Id">@acc.AccountName</option>
+        }
+    </select>
+    <button type="submit">Save</button>
+</form>
+
+<hr />
+
+<h3>Account Tree</h3>
+<ul>
+    @foreach (var line in Model.AccountTree)
+    {
+        <li>@Html.Raw(line)</li>
+    }
+</ul>
+
+<hr />
+
+<h3>Manage Accounts</h3>
+<table>
+    <thead>
+        <tr><th>Name</th><th>Code</th><th>Type</th><th>Parent</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var acc in Model.AllAccounts)
+        {
+            <tr>
+                <td>@acc.AccountName</td>
+                <td>@acc.AccountCode</td>
+                <td>@acc.AccountType</td>
+                <td>@Model.AllAccounts.FirstOrDefault(p => p.Id == acc.ParentId)?.AccountName</td>
+                <td>
+                    <form method="post" asp-page-handler="Edit">
+                        <input type="hidden" name="id" value="@acc.Id" />
+                        <button type="submit">Edit</button>
+                    </form>
+                    <form method="post" asp-page-handler="Delete">
+                        <input type="hidden" name="id" value="@acc.Id" />
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

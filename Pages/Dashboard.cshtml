@@ -1,0 +1,25 @@
+﻿@page
+@model DashboardModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>Welcome, @User.Identity.Name</h2>
+
+<div class="mt-4">
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="btn btn-primary m-2" asp-page="/UserRoles">User Roles</a>
+
+    }
+
+    @if (User.IsInRole("Admin") || User.IsInRole("Accountant") || User.IsInRole("Viewer"))
+    {
+        <a class="btn btn-success m-2" asp-page="/ChartOfAccounts">Chart of Accounts</a>
+    }
+
+    @if (User.IsInRole("Admin") || User.IsInRole("Accountant"))
+    {
+        <a class="btn btn-warning m-2" asp-page="/VoucherEntry">Voucher Entry Module</a>
+    }
+</div>

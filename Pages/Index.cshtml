@@ -1,10 +1,19 @@
 ﻿@page
-@model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Home";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-section text-white text-center">
+    <div class="container">
+        <h1>Welcome to the Account Management System</h1>
+        <p class="lead">Manage your accounts, vouchers, and users with ease and security.</p>
+
+        <a class="btn btn-primary btn-lg me-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        <a class="btn btn-outline-light btn-lg" asp-area="Identity" asp-page="/Account/Register">Register</a>
+    </div>
+</section>
+
+@section Scripts {
+    <!-- If you want to add page-specific scripts here later -->
+}
