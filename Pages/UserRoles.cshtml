@@ -1,0 +1,39 @@
+﻿@page
+@model UserRolesModel
+@using Microsoft.AspNetCore.Identity
+@{
+    ViewData["Title"] = "Assign Roles to Users";
+}
+
+<h2>Assign Roles</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Current Role</th>
+            <th>Assign New Role</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.CurrentRole</td>
+                <td>
+                    <form method="post">
+                        <input type="hidden" name="UserId" value="@user.Id" />
+                        <select name="SelectedRole" class="form-control">
+                            <option value="Admin">Admin</option>
+                            <option value="Accountant">Accountant</option>
+                            <option value="Viewer">Viewer</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">Assign</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
