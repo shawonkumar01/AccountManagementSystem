@@ -1,4 +1,4 @@
-﻿@page 
+﻿@page
 @model DashboardModel
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Admin,Accountant,Viewer")]
@@ -25,11 +25,17 @@
     {
         <form method="get" class="d-inline">
             <div class="input-group m-2" style="max-width: 300px;">
-                <input type="number" name="SearchCode" class="form-control" placeholder="Enter Account ID" required />
+                <input type="text" name="SearchCode" class="form-control" placeholder="Enter Account Code" required />
                 <button type="submit" class="btn btn-outline-info">Search My Account</button>
             </div>
         </form>
-        <a class="btn btn-warning m-2" asp-page="/VoucherEntry">Voucher Entry Module</a>
+
+        <form method="get" class="d-inline">
+            <div class="input-group m-2" style="max-width: 300px;">
+                <input type="text" name="ReferenceSearch" class="form-control" placeholder="Enter Voucher Reference" required />
+                <button type="submit" class="btn btn-outline-secondary">Search Voucher</button>
+            </div>
+        </form>
     }
 </div>
 
@@ -44,7 +50,26 @@
         </div>
     </div>
 }
-else if (User.IsInRole("Viewer") && ViewContext.HttpContext.Request.Query.ContainsKey("SearchId"))
+else if (!string.IsNullOrWhiteSpace(Request.Query["SearchCode"]))
 {
-    <div class="alert alert-danger">No account found with that ID.</div>
+    <div class="alert alert-warning">No account found with that code.</div>
+}
+
+@if (Model.SearchedVoucher != null)
+{
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Voucher Found</h5>
+            <p><strong>Type:</strong> @Model.SearchedVoucher.VoucherType</p>
+            <p><strong>Reference:</strong> @Model.SearchedVoucher.ReferenceNo</p>
+            <p><strong>Date:</strong> @Model.SearchedVoucher.VoucherDate.ToString("yyyy-MM-dd")</p>
+            <p><strong>Total Debit:</strong> @Model.SearchedVoucher.TotalDebit.ToString("N2")</p>
+            <p><strong>Total Credit:</strong> @Model.SearchedVoucher.TotalCredit.ToString("N2")</p>
+            <p><strong>Created By:</strong> @Model.SearchedVoucher.CreatedBy</p>
+        </div>
+    </div>
+}
+else if (!string.IsNullOrWhiteSpace(Request.Query["ReferenceSearch"]))
+{
+    <div class="alert alert-warning">No voucher found with that reference.</div>
 }
