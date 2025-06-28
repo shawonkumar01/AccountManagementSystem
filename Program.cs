@@ -1,9 +1,13 @@
-﻿// ✅ Program.cs (FINAL FIXED VERSION)
-using AccountManagementSystem.Data;
+﻿using AccountManagementSystem.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ✅ EPPlus license setup for version 8+
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                       ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -28,7 +32,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddRazorPages(options =>
 {
-    options.Conventions.AuthorizeFolder("/");
+    options.Conventions.AuthorizeFolder("/"); // protect all Razor pages
     options.Conventions.AllowAnonymousToPage("/Index");
     options.Conventions.AllowAnonymousToPage("/Identity/Account/Login");
     options.Conventions.AllowAnonymousToPage("/Identity/Account/Register");
@@ -39,6 +43,7 @@ builder.Services.AddTransient<VoucherRepository>();
 
 var app = builder.Build();
 
+// ✅ Create default roles and admin user
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -51,6 +56,7 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
+    // ✅ Default admin user
     string adminEmail = "admin@gmail.com";
     string adminPassword = "Admin@123";
 
@@ -58,8 +64,11 @@ using (var scope = app.Services.CreateScope())
     if (adminUser == null)
     {
         adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail };
-        await userManager.CreateAsync(adminUser, adminPassword);
-        await userManager.AddToRoleAsync(adminUser, "Admin");
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
     }
 }
 
@@ -72,7 +81,10 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapRazorPages();
+
 app.Run();
