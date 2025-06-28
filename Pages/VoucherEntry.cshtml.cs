@@ -20,38 +20,69 @@ public class VoucherEntryModel : PageModel
     public VoucherViewModel Voucher { get; set; }
 
     public List<ChartOfAccount> AllAccounts { get; set; } = new();
-    public List<Voucher> SavedVouchers { get; set; } = new(); // 🔁 FIXED type
+    public List<VoucherWithDetails> SavedVouchers { get; set; } = new();
 
     public void OnGet()
     {
         LoadAccounts();
 
-        // Initialize with one entry
-        Voucher = new VoucherViewModel
+        Voucher ??= new VoucherViewModel
         {
-            VoucherDate = DateTime.Today,
-            Entries = new List<VoucherEntryLine> { new VoucherEntryLine() }
+            VoucherDate = DateTime.Today, // Prevent default year 0001
+            Entries = new List<VoucherEntryLine>
+            {
+                new VoucherEntryLine()
+            }
         };
 
-        SavedVouchers = _voucherRepo.GetAllVouchers();
+        SavedVouchers = _voucherRepo.GetAllVouchersWithDetails();
     }
 
     public IActionResult OnPost()
     {
         LoadAccounts();
 
-        if (Voucher?.Entries == null || Voucher.Entries.All(e => e.DebitAmount == 0 && e.CreditAmount == 0))
+        if (Voucher == null || Voucher.Entries == null || !Voucher.Entries.Any())
         {
-            ModelState.AddModelError("", "Please enter at least one valid Debit or Credit entry.");
+            ModelState.AddModelError("", "Voucher or its entries are missing.");
             return Page();
         }
 
-        _voucherRepo.SaveVoucher(Voucher, User.Identity?.Name ?? "System");
-        TempData["Message"] = "Voucher saved successfully.";
         if (Voucher.VoucherDate < new DateTime(1753, 1, 1))
         {
-            ModelState.AddModelError("Voucher.VoucherDate", "Please select a valid date.");
+            ModelState.AddModelError("", "Invalid voucher date. Please select a date after 01/01/1753.");
             return Page();
+        }
+
+        if (!ModelState.IsValid || Voucher.Entries.All(e => e.DebitAmount == 0 && e.CreditAmount == 0))
+        {
+            ModelState.AddModelError("", "At least one entry must have a Debit or Credit amount.");
+            return Page();
+        }
+
+        try
+        {
+            _voucherRepo.SaveVoucher(Voucher, User.Identity?.Name ?? "System");
+            TempData["Message"] = "Voucher saved successfully.";
+            return RedirectToPage();
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", "Error while saving voucher: " + ex.Message);
+            return Page();
+        }
+    }
+
+    public IActionResult OnPostDelete(int id)
+    {
+        try
+        {
+            _voucherRepo.DeleteVoucher(id);
+            TempData["Message"] = "Voucher deleted successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Message"] = "Error deleting voucher: " + ex.Message;
         }
 
         return RedirectToPage();
